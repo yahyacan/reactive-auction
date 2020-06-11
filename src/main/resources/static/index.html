@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.10/semantic.min.css" />
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/numeral.js/2.0.6/numeral.min.js"></script>
+<script type="text/javascript">
+
+	let _that = this;
+	let firstProcess = false;
+	let vehicleImg = document.getElementById('vehicleImg');
+	let labelBrand = document.getElementById('labelBrand');
+	let labelModel = document.getElementById('labelModel');
+	let labelAmount = document.getElementById('labelAmount');
+	let bid;
+
+	var eventSource = new EventSource("bids/1");
+	eventSource.onmessage = function(event) {
+		_that.bid = JSON.parse(event.data);
+		if (!_that.firstProcess){
+			_that.vehicleImg.src = _that.bid.image;
+			_that.labelBrand.textContent=_that.bid.brand;
+			_that.labelModel.textContent=_that.bid.model;
+			_that.firstProcess=true;
+		}
+		var number = numeral(_that.bid.amount);
+		_that.labelAmount.textContent = number.format() + ' TL';
+	}
+
+	function formatMoney(number, decPlaces, decSep, thouSep) {
+		decPlaces = isNaN(decPlaces = Math.abs(decPlaces)) ? 2 : decPlaces,
+				decSep = typeof decSep === "undefined" ? "." : decSep;
+		thouSep = typeof thouSep === "undefined" ? "," : thouSep;
+		var sign = number < 0 ? "-" : "";
+		var i = String(parseInt(number = Math.abs(Number(number) || 0).toFixed(decPlaces)));
+		var j = (j = i.length) > 3 ? j % 3 : 0;
+
+		return sign +
+				(j ? i.substr(0, j) + thouSep : "") +
+				i.substr(j).replace(/(\decSep{3})(?=\decSep)/g, "$1" + thouSep) +
+				(decPlaces ? decSep + Math.abs(number - i).toFixed(decPlaces).slice(2) : "");
+	}
+
+	function bidIncrease(){
+		this.bid.amount += 100;
+		$.ajax({
+			url:'bids',
+			type:"PUT",
+			data:JSON.stringify(this.bid),
+			contentType:"application/json; charset=utf-8",
+			dataType:"json",
+			success: function(){
+				//alert('Teklifiniz verildi!');
+			}
+		});
+	}
+
+</script>
+</head>
+<body>
+	<div>
+		<div id="connect-container" class="ui centered grid">
+			<div class="row">
+				<img id="vehicleImg">
+			</div>
+			<div class="row">
+				<table>
+					<tr>
+						<td style="text-align:right">
+							Marka
+						</td>
+						<td>
+							&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;
+						</td>
+						<td style="text-align:left">
+							<span id="labelBrand"/>
+						</td>
+					</tr>
+					<tr>
+						<td style="text-align:right">
+							Model
+						</td>
+						<td>
+							&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;
+						</td>
+						<td style="text-align:left">
+							<span id="labelModel"/>
+						</td>
+					</tr>
+					<tr>
+						<td style="text-align:right">
+							Fiyat
+						</td>
+						<td>
+							&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;
+						</td>
+						<td style="text-align:left">
+							<span id="labelAmount"/>
+						</td>
+					</tr>
+				</table>
+			</div>
+
+			<div class="row">
+				<button id="btnIncrease" onclick="bidIncrease();" class="ui green button ">100 TL</button>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
